@@ -5,7 +5,7 @@ using namespace std;
 const int boardsize = 4;
 const int cellsize = 2; // cell size is basizally 2 if(9x9) sudoku then cell size will be 3
 
-// Thhis board will be having full solution
+// This board will be having full solution
 int board[boardsize][boardsize];
 
 // helper method to check if a choice is worth exploring.
