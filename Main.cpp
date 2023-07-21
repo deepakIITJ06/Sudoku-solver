@@ -1,72 +1,88 @@
-#include <iostream>
-#include <string>
-#include <fstream>
-#include <vector>
-#include <stack>
-#include "FileOperations.h"
-#include "Route.h"
-#include "GraphFunctions.h"
-
+#include<iostream>
 using namespace std;
 
-class ShortestPathFinder {
-public:
-    ShortestPathFinder(int argc, char* argv[]) {
-        if (argc > 1) citiesFilename = argv[1];
-        else getInput("Enter filename containing cities: ", citiesFilename);
+// You can change boardsize to 9 aur something (if sudoku is 9 x 9)
+const int boardsize = 4;
+const int cellsize = 2; // cell size is basizally 2 if(9x9) sudoku then cell size will be 3
 
-        if (argc > 2) routesFilename = argv[2];
-        else getInput("Enter filename containing routes: ", routesFilename);
+// This board will be having full solution
+int board[boardsize][boardsize];
 
-        if (argc > 3) outputFilename = argv[3];
-        else getInput("Enter filename for output (.html): ", outputFilename);
-
-        if (argc > 4) origin = argv[4];
-        else getInput("Origin: ", origin);
-
-        if (argc > 5) destination = argv[5];
-        else getInput("Destination: ", destination);
-
-        if (argc > 6) preference = argv[6];
-        else getInput("Enter a preference (fastest/cheapest): ", preference);
-
-        biPreference = preference == "cheapest";
+// helper method to check if a choice is worth exploring.
+bool check(int cval, int row,int col){
+    // row check
+    for(int c=0;c<boardsize;c++){
+        if(c!=col && board[row][c]==cval) return false;
     }
-
-    void run() {
-        Graph graph(citiesFilename, routesFilename);
-
-        if (graph.getCity(origin) == nullptr || graph.getCity(destination) == nullptr) {
-            cout << "Invalid entry" << endl;
-            return;
+    // column check
+    for(int r=0;r<boardsize;r++){
+        if(r!=row && board[r][col]==cval) return false;
+    }
+    // checking in the (2x2) box 
+    int str = (row/cellsize)*cellsize;
+    int stc = (col/cellsize)*cellsize;
+    for(int i=0;i<cellsize;i++){
+        for(int j=0;j<cellsize;j++){
+            if(str+i==row && stc+j==col) continue;
+            if(board[str+i][stc+j]==cval) return false;
         }
-
-        graph.Dijkstras(origin, biPreference);
-
-        stack<Location*> cityStack = graph.cityStacker(destination);
-        stack<Route*> routeStack = graph.routeStacker(destination, biPreference);
-
-        outputGenerator(outputFilename.c_str(), cityStack, routeStack, biPreference);
     }
-
-private:
-    string citiesFilename;
-    string routesFilename;
-    string outputFilename;
-    string origin;
-    string destination;
-    string preference;
-    bool biPreference;
-
-    void getInput(const string& prompt, string& input) {
-        cout << prompt;
-        cin >> input;
-    }
-};
-
-int main(int argc, char* argv[]) {
-    ShortestPathFinder pathFinder(argc, argv);
-    pathFinder.run();
-    return 0;
+    return true;
 }
 
+// 1. level
+int ans = 0;
+void rec(int row,int col){
+    // base case
+    if(col==boardsize){
+        rec(row+1,0);
+        return;
+    }
+    if(row==boardsize){
+        // ans is here no of solution
+        ans++;
+        // priinting the solution
+        for(int i=0;i<boardsize;i++){
+            for(int j=0;j<boardsize;j++){
+                cout<<board[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        return;
+    }
+    // recursive case.
+    
+    if(board[row][col]==0){
+        // choice
+        for(int val=1;val<=boardsize;val++){
+            // check
+            if(check(val,row,col)){
+                // move
+                board[row][col] = val;
+                rec(row,col+1);
+                // revert
+                board[row][col] = 0; 
+            }
+        }
+    }
+    else{
+        if(check(board[row][col],row,col)){
+            rec(row,col+1);
+        }
+    }
+}
+
+void solve(){
+    // taking initial values on the board
+    for(int i=0;i<boardsize;i++){
+        for(int j=0;j<boardsize;j++){
+            cin>>board[i][j];
+        }
+    }
+    // recursive call
+    rec(0,0);
+}
+
+int main(){
+    solve();
+}
